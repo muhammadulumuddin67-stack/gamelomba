@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preposition Quest - Adventure Game</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for playful and clean typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', 'Inter', sans-serif;
+            background-color: #0b0f19;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow-x: hidden;
+        }
+        .explosion-ring {
+            animation: explode-burst 0.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        }
+        @keyframes explode-burst {
+            0% { transform: scale(0.3); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.9; }
+            100% { transform: scale(1.7); opacity: 0; }
+        }
+        /* Glassmorphic elements */
+        .glass-light {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+        .glass-dark {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        /* Basket throw action keyframe */
+        @keyframes throw-action {
+            0% { transform: scale(1) translateY(0); }
+            35% { transform: scale(0.9) translateY(12px) rotate(-5deg); }
+            65% { transform: scale(1.05) translateY(-20px) rotate(10deg); }
+            100% { transform: scale(1) translateY(0) rotate(0); }
+        }
+        .throw-active {
+            animation: throw-action 0.45s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+        }
+    </style>
+</head>
+<body class="text-white min-h-screen flex flex-col items-center justify-between p-2 md:p-4 bg-slate-950">
+
+    <div class="w-full max-w-5xl bg-slate-900 rounded-3xl shadow-2xl border-4 border-slate-800 overflow-hidden flex flex-col justify-between my-auto">
+        
+        <!-- HEADER / TOP NAV BAR -->
+        <div class="bg-slate-800 px-4 py-3 flex flex-wrap items-center justify-between border-b-4 border-slate-700 gap-2">
+            <div class="flex items-center space-x-3">
+                <span class="text-3xl">🧭</span>
+                <div>
+                    <h1 class="text-lg md:text-xl font-bold text-yellow-400 tracking-wide font-sans">Preposition Quest</h1>
+                    <p class="text-xs text-slate-400 font-sans">Kuasai Kata Depan Bahasa Inggris dengan Seru!</p>
+                </div>
+            </div>
+            
+            <!-- Dynamic HUD indicators -->
+            <div class="flex items-center space-x-3 md:space-x-6">
+                <!-- Current Level Badge -->
+                <div class="bg-indigo-950 border border-indigo-500/30 px-3 py-1.5 rounded-full flex items-center space-x-2">
+                    <span class="text-xs font-semibold text-indigo-300 uppercase font-sans">Level:</span>
+                    <span id="level-indicator" class="text-sm font-bold text-indigo-400 font-sans">1 / 3</span>
+                </div>
+                
+                <!-- Score Counter -->
+                <div class="bg-emerald-950 border border-emerald-500/30 px-3 py-1.5 rounded-full flex items-center space-x-2">
+                    <span class="text-xs font-semibold text-emerald-300 uppercase font-sans">Skor:</span>
+                    <span id="score-display" class="text-sm font-bold text-emerald-400 font-sans">0</span>
+                </div>
+
+                <!-- Timer Counter -->
+                <div id="timer-box" class="hidden bg-rose-950 border border-rose-500/30 px-3 py-1.5 rounded-full flex items-center space-x-2">
+                    <span class="text-xs font-semibold text-rose-300 uppercase font-sans">Waktu:</span>
+                    <span id="timer-display" class="text-sm font-bold text-rose-400 font-sans">100s</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN GAMEPLAY BOARD -->
+        <div class="relative w-full bg-slate-950 flex flex-col justify-center items-center min-h-[440px] md:min-h-[500px]">
+            
+            <!-- WELCOME/START SCREEN -->
+            <div id="screen-welcome" class="p-6 md:p-10 text-center flex flex-col items-center space-y-5 w-full">
+                <div class="w-24 h-24 bg-slate-800 rounded-full flex items-center justify-center text-5xl shadow-inner border-4 border-indigo-500/30 animate-bounce">
+                    🏀
+                </div>
+                <h2 class="text-2xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 font-sans">
+                    Selamat Datang di Preposition Quest!
+                </h2>
+                <p class="text-slate-300 text-sm md:text-base max-w-lg font-sans leading-relaxed">
+                    Mari pelajari dan kuasai kata depan bahasa Inggris (Prepositions of Place) melalui petualangan interaktif 3 level!
+                </p>
+                <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl max-w-lg text-left text-xs text-slate-400 font-sans space-y-2">
+                    <p class="font-bold text-slate-200 text-sm">🏆 Jalur Petualangan Kamu:</p>
+                    <p>• <b>Level 1 (Papan Kuis Terang):</b> Jawab 10 kalimat rumpang dengan memilih satu dari 13 preposisi di layar terang transparan tanpa batasan waktu.</p>
+                    <p>• <b>Level 2 (Basket Catcher):</b> Geser karakter pemain basket di bagian bawah layar untuk menangkap bola basket preposisi jawaban yang benar!</p>
+                    <p>• <b>Level 3 (Shooter Lapangan Basket):</b> Klik keranjang preposisi yang bergerak memantul secara acak di layar untuk melempar bola melambung tinggi!</p>
+                </div>
+                <button onclick="startGame()" class="px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-lg rounded-2xl shadow-lg transition transform hover:-translate-y-1 active:translate-y-0 w-full max-w-xs font-sans">
+                    Mulai Belajar! 🚀
+                </button>
+            </div>
+
+            <!-- LEVEL 1 SCREEN (STATIC BRIGHT BOARD WITH ALL 13 OPTIONS) -->
+            <div id="screen-level1" class="hidden w-full flex flex-col items-center p-4 relative min-h-[460px]">
+                <div class="absolute inset-0 z-0 bg-white">
+                    <img src="https://i.imgur.com/WdjFNGA.png" class="w-full h-full object-cover opacity-90 brightness-110 contrast-105 pointer-events-none" alt="Bedroom Bright">
+                </div>
+
+                <div class="w-full text-center max-w-3xl mb-3 z-10 glass-light px-4 py-2 rounded-xl shadow-sm text-slate-900">
+                    <span class="text-xs uppercase tracking-widest text-indigo-700 font-sans font-bold">Level 1: Papan Belajar Terang</span>
+                    <h3 class="text-lg md:text-xl font-bold mt-0.5">Lengkapi Kalimat Rumpang di Bawah</h3>
+                </div>
+
+                <div class="w-full max-w-2xl glass-light border-2 border-white p-4 rounded-2xl text-center shadow-md mb-4 z-10 text-slate-900">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[10px] uppercase font-bold text-slate-500 font-sans">Pertanyaan Ke:</span>
+                        <span id="l1-question-num" class="text-xs font-extrabold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-md font-sans">1 / 10</span>
+                    </div>
+                    <p id="l1-sentence" class="text-base md:text-lg font-bold tracking-wide text-slate-900 font-sans">The teddy bear is ______ the bed.</p>
+                    <p id="l1-translation" class="text-xs text-slate-600 italic mt-1 font-sans">Arti: (Boneka beruang ada di atas kasur.)</p>
+                </div>
+
+                <div id="l1-options-container" class="w-full max-w-3xl grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mb-2 z-10"></div>
+            </div>
+
+            <!-- LEVEL 2 SCREEN (FALLING BASKETBALLS WITH MOVING PLAYER - 5 OPTIONS) -->
+            <div id="screen-level2" class="hidden w-full flex flex-col items-center p-4 relative">
+                <!-- Custom Basketball Court Background -->
+                <div class="absolute inset-0 z-0">
+                    <img src="https://i.imgur.com/H6UVqeg.png" class="w-full h-full object-cover opacity-90" alt="Court bg">
+                </div>
+
+                <div class="w-full max-w-3xl flex justify-between items-center mb-3 z-10">
+                    <span class="text-xs uppercase tracking-wider text-slate-200 font-sans font-bold bg-black/55 px-3 py-1 rounded-full">Level 2: Basket Catcher (5 Pilihan Bola)</span>
+                    <span class="bg-slate-800 border border-slate-700 px-3 py-1 rounded-full text-xs font-semibold text-yellow-400 font-sans">Pertanyaan: <span id="l2-question-num">1/10</span></span>
+                </div>
+
+                <!-- Clue Sentence (Fill in the blanks) -->
+                <div class="w-full max-w-3xl bg-slate-950/90 border border-slate-700 p-4 rounded-2xl text-center shadow-lg mb-4 z-10">
+                    <p class="text-xs font-semibold uppercase tracking-widest text-indigo-400 mb-1 font-sans">Tangkap bola basket yang tepat dengan menggeser pemain di bawah:</p>
+                    <p id="l2-sentence" class="text-base md:text-lg font-bold tracking-wide text-white">The book is _____ the desk.</p>
+                    <p id="l2-translation" class="text-xs text-slate-400 italic mt-1 font-sans">Arti: (Buku berada di bawah meja.)</p>
+                </div>
+
+                <!-- Falling Container Field -->
+                <div class="w-full max-w-3xl rounded-2xl relative overflow-hidden h-[300px] md:h-[350px] border-4 border-slate-800 z-10 bg-slate-950/30" id="l2-falling-field">
+                    
+                    <!-- Draggable / Moveable Basketball Player -->
+                    <div id="l2-catcher-player" class="absolute bottom-2 left-1/2 -translate-x-1/2 w-20 h-20 z-20 cursor-pointer pointer-events-auto transition-all duration-75">
+                        <img src="https://i.imgur.com/P6rvjBa.png" class="w-full h-full object-contain drop-shadow-[0_4px_10px_rgba(249,115,22,0.8)]" alt="Catcher Player">
+                    </div>
+
+                    <!-- Bottom Safety boundary border -->
+                    <div class="absolute bottom-0 inset-x-0 h-4 bg-gradient-to-t from-orange-950/40 to-transparent border-t border-orange-500/20"></div>
+                </div>
+                <p class="text-[10px] md:text-xs text-slate-300 mt-2 text-center font-sans z-10 bg-black/60 px-3 py-1 rounded-full">↔️ Geser jari / gerakkan mouse ke kiri & kanan untuk menangkap jawaban yang tepat!</p>
+            </div>
+
+            <!-- LEVEL 3 SCREEN (SCATTERED HOOPS WITH PLAYER THROWING PARABOLIC BALL) -->
+            <div id="screen-level3" class="hidden w-full flex flex-col items-center p-4 relative">
+                <!-- Bedroom BG modified for Basketball field overlay -->
+                <div class="absolute inset-0 z-0">
+                    <img src="https://i.imgur.com/WdjFNGA.png" class="w-full h-full object-cover opacity-45" alt="Room bg">
+                    <div class="absolute inset-0 bg-slate-950/60"></div>
+                </div>
+
+                <div class="w-full max-w-3xl flex justify-between items-center mb-2 z-10">
+                    <span class="text-xs uppercase tracking-wider text-slate-300 font-sans font-bold bg-black/55 px-3 py-1 rounded-full">Level 3: Basketball Hoop Shooter (Memantul Acak)</span>
+                    <span class="bg-slate-800 border border-slate-700 px-3 py-1 rounded-full text-xs font-semibold text-cyan-400 font-sans">Pertanyaan: <span id="l3-question-num">1/10</span></span>
+                </div>
+
+                <!-- Clue Sentence -->
+                <div class="w-full max-w-3xl bg-slate-900/95 border border-slate-700 p-4 rounded-2xl text-center shadow-lg mb-3 z-10">
+                    <p class="text-xs font-semibold uppercase tracking-widest text-orange-400 mb-1 font-sans">Lemparkan Bola ke Keranjang Preposisi yang Benar!</p>
+                    <p id="l3-sentence" class="text-base md:text-lg font-bold tracking-wide text-white">The puppy sits _____ the cozy armchair.</p>
+                    <p id="l3-translation" class="text-xs text-slate-400 italic mt-1 font-sans">Arti: (Anak anjing duduk di atas kursi yang nyaman.)</p>
+                </div>
+
+                <!-- Basketball Court Field -->
+                <div class="w-full max-w-3xl rounded-2xl relative overflow-hidden h-[390px] border-4 border-slate-800 z-10 bg-slate-950/40" id="l3-shooting-field">
+                    
+                    <!-- Basketball Player Kid at the BOTTOM center -->
+                    <div id="l3-gun-turret" class="absolute bottom-2 left-1/2 -translate-x-1/2 w-28 h-28 z-30 flex items-center justify-center pointer-events-none">
+                        <img id="l3-gun-img" src="https://i.imgur.com/P6rvjBa.png" class="w-24 h-auto drop-shadow-[0_0_15px_rgba(249,115,22,0.8)] origin-bottom transition-transform duration-75" alt="Pemain Basket">
+                    </div>
+
+                    <!-- Containers for the scattered hoops (Slide in from left side) -->
+                    <div id="l3-hoops-container" class="absolute inset-0 z-20"></div>
+
+                    <!-- Overlay Layer for Explosions / Success sparks -->
+                    <div id="l3-explosions-layer" class="absolute inset-0 pointer-events-none z-40"></div>
+                </div>
+                <p class="text-[10px] md:text-xs text-slate-400 mt-2 text-center font-sans z-10">🏀 Klik langsung pada keranjang preposisi pilihanmu untuk melempar bola basket secara melambung!</p>
+            </div>
+
+            <!-- LEVEL COMPLETED TRANSITION SCREEN -->
+            <div id="screen-transition" class="hidden p-8 text-center flex flex-col items-center space-y-6 w-full max-w-md z-10">
+                <div class="text-6xl animate-bounce">⭐</div>
+                <h3 id="transition-title" class="text-2xl md:text-3xl font-extrabold text-yellow-400 font-sans">Kerja Bagus!</h3>
+                <p id="transition-desc" class="text-slate-300 text-sm font-sans">Anda berhasil menyelesaikan tantangan level.</p>
+                <button id="transition-btn" onclick="goToNextLevel()" class="px-6 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0 w-full font-sans">
+                    Lanjut Ke Level Berikutnya
+                </button>
+            </div>
+
+            <!-- ON-DEVICE CERTIFICATE CLAIM & GENERATION SCREEN -->
+            <div id="screen-certificate" class="hidden p-4 md:p-6 w-full flex flex-col items-center justify-center z-10 text-center">
+                <div class="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center text-3xl mb-3 border border-emerald-500/40 animate-bounce">
+                    🎉
+                </div>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400 font-sans">
+                    Semua Level Selesai!
+                </h2>
+                <p class="text-slate-300 text-xs md:text-sm max-w-md mt-1 font-sans">
+                    Selamat! Masukkan nama lengkap Anda di bawah ini untuk mencetak dan mengunduh sertifikat kelulusan digital Anda secara instan.
+                </p>
+
+                <!-- Inputs & Triggers -->
+                <div class="mt-4 w-full max-w-md space-y-3">
+                    <input type="text" id="player-fullname" placeholder="Masukkan Nama Lengkap Anda..." class="w-full px-4 py-3 rounded-2xl bg-slate-900 border-2 border-slate-700 text-white text-center font-bold text-base md:text-lg focus:outline-none focus:border-emerald-400 transition placeholder-slate-500 font-sans">
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="renderCertificate()" class="py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-sm md:text-base rounded-xl shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-1 font-sans">
+                            <span>Buat Sertifikat</span> <span>🎓</span>
+                        </button>
+                        <button id="download-btn-laptop" onclick="downloadOnLaptop()" class="hidden py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-bold text-sm md:text-base rounded-xl shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-1 font-sans">
+                            <span>Simpan Gambar</span> <span>💾</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Instructional Hint for Android APK / Mobile Zoom -->
+                <p id="mobile-instruction" class="hidden text-[10px] text-yellow-400 mt-3 font-semibold font-sans bg-yellow-950/50 border border-yellow-500/30 px-3 py-2 rounded-xl max-w-sm">
+                    💡 Modus Android APK: Setelah menekan tombol "Buat Sertifikat", tekan lama gambar di bawah lalu pilih "Simpan/Download Gambar" untuk menyimpannya di Galeri HP Anda!
+                </p>
+
+                <!-- Hidden Canvas used to programmatically render high-res certificate image -->
+                <canvas id="canvas-cert" width="1000" height="700" class="hidden"></canvas>
+
+                <!-- Image container to display final high-quality certificate for mobile long-press saves -->
+                <div id="cert-img-container" class="hidden mt-6 w-full max-w-2xl border-4 border-slate-700 rounded-2xl overflow-hidden shadow-2xl bg-slate-950">
+                    <img id="cert-display" class="w-full h-auto object-contain" alt="Sertifikat Anda">
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER BAR -->
+        <div id="game-instructions-footer" class="bg-slate-900 border-t-2 border-slate-800 px-4 py-3 text-center text-xs text-slate-400 font-sans">
+            Mendukung Smartphone, Tablet, PC, Laptop, dan Interactive Flat Panel (IFP) sekolah.
+        </div>
+    </div>
+
+    <!-- AUDIO MANAGEMENT -->
+    <script>
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioCtx();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playSound(type) {
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'success') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); 
+                    osc.frequency.exponentialRampToValueAtTime(1046.50, audioCtx.currentTime + 0.15); 
+                    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.15);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(90, audioCtx.currentTime + 0.25);
+                    gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.25);
+                } else if (type === 'shoot') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(350, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.25); 
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.25);
+                } else if (type === 'explode') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(320, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(140, audioCtx.currentTime + 0.35); 
+                    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.35);
+                } else if (type === 'complete') {
+                    const tempo = 0.12;
+                    const melody = [523.25, 659.25, 783.99, 1046.50];
+                    melody.forEach((freq, idx) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.type = 'triangle';
+                        o.frequency.setValueAtTime(freq, audioCtx.currentTime + idx * tempo);
+                        g.gain.setValueAtTime(0.1, audioCtx.currentTime + idx * tempo);
+                        g.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + idx * tempo + 0.2);
+                        o.start(audioCtx.currentTime + idx * tempo);
+                        o.stop(audioCtx.currentTime + idx * tempo + 0.2);
+                    });
+                }
+            } catch (err) {
+                console.warn('Audio synthesis initialized silently:', err);
+            }
+        }
+    </script>
+
+    <!-- GAME DATA DEFINITIONS -->
+    <script>
+        let gameState = {
+            currentLevel: 0, 
+            score: 0,
+            timeLeft: 100,
+            timerInterval: null,
+            level1QuestionIndex: 0,
+            level2QuestionIndex: 0,
+            level3QuestionIndex: 0,
+        };
+
+        const all13Prepositions = [
+            "on", "in", "under", "behind", "next to", "across from", 
+            "among", "between", "in front of", "over", "above", "below", "at"
+        ];
+
+        // Koordinat batas aman awal agar keranjang tidak tumpang tindih secara vertikal saat spawn
+        const scatteredHoopPositions = [
+            { x: 10, y: 8 },
+            { x: 35, y: 12 },
+            { x: 65, y: 8 },
+            { x: 80, y: 22 },
+            { x: 15, y: 40 },
+            { x: 45, y: 35 },
+            { x: 72, y: 42 }
+        ];
+
+        const level1Questions = [
+            { sentence: "The teddy bear is ______ the bed.", translation: "(Boneka beruang ada di ATAS kasur.)", answer: "on" },
+            { sentence: "The blue backpack is ______ the wooden desk.", translation: "(Tas ransel biru berada di BAWAH meja kayu.)", answer: "under" },
+            { sentence: "The round wall clock hangs ______ the bookshelf.", translation: "(Jam dinding bulat tergantung di ATAS rak buku.)", answer: "above" },
+            { sentence: "A pair of red socks is tucked ______ the drawer.", translation: "(Sepasang kaus kaki merah terselip di DALAM laci.)", answer: "in" },
+            { sentence: "The nightstand lamp stands ______ the bed.", translation: "(Lampu nakas berdiri di SEBELAH tempat tidur.)", answer: "next to" },
+            { sentence: "The red apple is sitting ______ two heavy books.", translation: "(Apel merah berada di ANTARA dua buku tebal.)", answer: "between" },
+            { sentence: "The toy car is parked ______ the cardboard box.", translation: "(Mobil mainan diparkir di DEPAN kotak kardus.)", answer: "in front of" },
+            { sentence: "A colorful painting is hanging ______ the wardrobe.", translation: "(Sebuah lukisan berwarna-warni tergantung melangkahi/di ATAS lemari pakaian.)", answer: "over" },
+            { sentence: "The yellow tennis ball is hidden ______ the rubbish bin.", translation: "(Bola tenis kuning tersembunyi di BELAKANG tempat sampah.)", answer: "behind" },
+            { sentence: "The sharp pencil holder sits ______ the corner of the desk.", translation: "(Wadah pensil tajam berada di SUDUT meja tulis.)", answer: "at" }
+        ];
+
+        const level2Questions = [
+            { sentence: "The sleeping cat is curled up ______ the cozy rug.", translation: "(Kucing yang tidur melingkar di ATAS karpet.)", options: ["on", "under", "behind", "next to", "above"], answer: "on" },
+            { sentence: "Your dustbin is kept ______ the study desk.", translation: "(Tempat sampahmu diletakkan di BAWAH meja belajar.)", options: ["under", "above", "between", "in", "behind"], answer: "under" },
+            { sentence: "A brilliant chandelier hangs ______ the central room.", translation: "(Lampu gantung kristal tergantung di ATAS ruangan.)", options: ["above", "in", "on", "among", "below"], answer: "above" },
+            { sentence: "Please put the broom ______ the tall wardrobe.", translation: "(Tolong taruh sapunya di BELAKANG lemari pakaian.)", options: ["behind", "below", "between", "under", "next to"], answer: "behind" },
+            { sentence: "The study desk is placed ______ the cozy bed.", translation: "(Meja belajar ditempatkan di SEBELAH tempat tidur.)", options: ["next to", "above", "in front of", "at", "between"], answer: "next to" },
+            { sentence: "The library is directly ______ the main corridor.", translation: "(Perpustakaan berada tepat di SEBERANG koridor utama.)", options: ["across from", "under", "at", "behind", "over"], answer: "across from" },
+            { sentence: "The cute green bag is hanging ______ the door handle.", translation: "(Tas hijau tergantung di DEKAT/DI gagang pintu.)", options: ["on", "above", "below", "in", "under"], answer: "on" },
+            { sentence: "The teacher stands ______ the group of students.", translation: "(Guru berdiri di ANTARA sekelompok murid.)", options: ["among", "between", "under", "above", "in front of"], answer: "among" },
+            { sentence: "The key rolled ______ two small boots.", translation: "(Kunci itu menggelinding di ANTARA dua sepatu boot.)", options: ["between", "among", "behind", "under", "above"], answer: "between" },
+            { sentence: "I sat down ______ the screen to play the adventure game.", translation: "(Saya duduk di DEPAN layar.)", options: ["in front of", "under", "next to", "on", "behind"], answer: "in front of" }
+        ];
+
+        const level3Questions = [
+            { sentence: "The small birds fly ______ the old house roof.", translation: "(Burung-burung kecil terbang melayang di ATAS atap rumah tua.)", answer: "over" },
+            { sentence: "There is a wooden bucket ______ the kitchen tap.", translation: "(Ada ember kayu di BAWAH keran dapur.)", answer: "below" },
+            { sentence: "Let's meet ______ the main gates this morning.", translation: "(Mari kita bertemu di PINTU GERBANG UTAMA pagi ini.)", answer: "at" },
+            { sentence: "Your golden treasure is kept ______ the wooden drawer.", translation: "(Harta karun emasmu disimpan di DALAM laci kayu.)", answer: "in" },
+            { sentence: "The cozy armchair is situated ______ the tall lamp.", translation: "(Kursi lengan yang nyaman terletak di SEBELAH lampu tinggi.)", answer: "next to" },
+            { sentence: "A single bright star shone ______ the mountain peaks.", translation: "(Satu bintang terang bersinar jauh di ATAS puncak gunung.)", answer: "above" },
+            { sentence: "A heavy suitcase was wedged ______ two wardrobes.", translation: "(Koper berat itu terselip di ANTARA dua lemari pakaian.)", answer: "between" },
+            { sentence: "The clean car is parked ______ the tall glass office.", translation: "(Mobil bersih diparkir di DEPAN kantor kaca yang tinggi.)", answer: "in front of" },
+            { sentence: "The children are playing happily ______ the public park.", translation: "(Anak-anak bermain gembira di TAMAN UMUM.)", answer: "at" },
+            { sentence: "The silver moon is hiding ______ the thick dark clouds.", translation: "(Bulan perak sedang bersembunyi di BALIK awan hitam tebal.)", answer: "behind" }
+        ];
+    </script>
+
+    <!-- CORE FLOW MECHANICS -->
+    <script>
+        function hideAllScreens() {
+            document.getElementById('screen-welcome').classList.add('hidden');
+            document.getElementById('screen-level1').classList.add('hidden');
+            document.getElementById('screen-level2').classList.add('hidden');
+            document.getElementById('screen-level3').classList.add('hidden');
+            document.getElementById('screen-transition').classList.add('hidden');
+            document.getElementById('screen-certificate').classList.add('hidden');
+        }
+
+        function startGame() {
+            initAudio();
+            gameState.currentLevel = 1;
+            gameState.score = 0;
+            gameState.level1QuestionIndex = 0;
+
+            document.getElementById('level-indicator').innerText = "1 / 3";
+            document.getElementById('score-display').innerText = gameState.score;
+            document.getElementById('timer-box').classList.add('hidden'); 
+
+            hideAllScreens();
+            document.getElementById('screen-level1').classList.remove('hidden');
+
+            loadLevel1Question();
+        }
+
+        function startTimer(duration) {
+            gameState.timeLeft = duration;
+            document.getElementById('timer-box').classList.remove('hidden');
+            document.getElementById('timer-display').innerText = gameState.timeLeft + "s";
+            
+            clearInterval(gameState.timerInterval);
+            gameState.timerInterval = setInterval(() => {
+                gameState.timeLeft--;
+                document.getElementById('timer-display').innerText = gameState.timeLeft + "s";
+                if (gameState.timeLeft <= 0) {
+                    clearInterval(gameState.timerInterval);
+                    gameOver();
+                }
+            }, 1000);
+        }
+
+        function gameOver() {
+            playSound('wrong');
+            showTransitionScreen(
+                "Waktu Habis! ⏰",
+                "Oh tidak! Waktu bermain kamu telah berakhir. Ayo coba lagi!",
+                "Ulangi Level Ini 🔁",
+                gameState.currentLevel
+            );
+        }
+
+        function showTransitionScreen(title, desc, buttonText, levelTarget) {
+            playSound('complete');
+            hideAllScreens();
+            document.getElementById('screen-transition').classList.remove('hidden');
+            document.getElementById('transition-title').innerText = title;
+            document.getElementById('transition-desc').innerText = desc;
+            document.getElementById('transition-btn').innerText = buttonText;
+            document.getElementById('transition-btn').onclick = () => {
+                initAudio();
+                if (levelTarget === 1) startGame();
+                else if (levelTarget === 2) startLevel2();
+                else if (levelTarget === 3) startLevel3();
+                else if (levelTarget === 'cert') startCertificateScreen();
+            };
+        }
+
+        function goToNextLevel() {
+            if (gameState.currentLevel === 1) {
+                startLevel2();
+            } else if (gameState.currentLevel === 2) {
+                startLevel3();
+            } else if (gameState.currentLevel === 3) {
+                startCertificateScreen();
+            }
+        }
+    </script>
+
+    <!-- LEVEL 1 MECHANICS -->
+    <script>
+        function loadLevel1Question() {
+            const question = level1Questions[gameState.level1QuestionIndex];
+            document.getElementById('l1-question-num').innerText = `${gameState.level1QuestionIndex + 1} / 10`;
+            document.getElementById('l1-sentence').innerText = question.sentence;
+            document.getElementById('l1-translation').innerText = `Arti: ${question.translation}`;
+
+            const optionsContainer = document.getElementById('l1-options-container');
+            optionsContainer.innerHTML = '';
+
+            all13Prepositions.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "py-2.5 px-3 bg-white/60 hover:bg-indigo-600 hover:text-white border-2 border-indigo-400/40 hover:border-indigo-600 rounded-xl text-xs md:text-sm font-bold text-slate-800 transition transform hover:-translate-y-0.5 active:scale-95 font-sans shadow-sm backdrop-blur-sm flex items-center justify-center gap-1";
+                btn.innerHTML = `<span>✏️</span> <span>${opt.toUpperCase()}</span>`;
+                btn.onclick = () => {
+                    handleLevel1Selection(btn, opt === question.answer);
+                };
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function handleLevel1Selection(btnElement, isCorrect) {
+            const buttons = document.getElementById('l1-options-container').querySelectorAll('button');
+            buttons.forEach(b => b.disabled = true);
+
+            if (isCorrect) {
+                playSound('success');
+                btnElement.className = "py-2.5 px-3 bg-gradient-to-r from-emerald-500 to-teal-600 border-2 border-emerald-400 rounded-xl text-xs md:text-sm font-extrabold text-white transition transform duration-200 scale-105 font-sans shadow-lg flex items-center justify-center gap-1";
+                
+                gameState.score += 10;
+                document.getElementById('score-display').innerText = gameState.score;
+                gameState.level1QuestionIndex++;
+
+                setTimeout(() => {
+                    if (gameState.level1QuestionIndex >= 10) {
+                        showTransitionScreen(
+                            "Selamat! Level 1 Berhasil!",
+                            "Anda menguasai pengenalan preposisi dasar dengan sangat baik! Mari bersiap untuk tantangan Level 2.",
+                            "Mulai Level 2 👉",
+                            2
+                        );
+                    } else {
+                        loadLevel1Question();
+                    }
+                }, 1000);
+            } else {
+                playSound('wrong');
+                btnElement.className = "py-2.5 px-3 bg-gradient-to-r from-rose-600 to-red-700 border-2 border-rose-500 rounded-xl text-xs md:text-sm font-extrabold text-white transition transform duration-200 animate-bounce font-sans shadow-lg flex items-center justify-center gap-1";
+                setTimeout(() => {
+                    buttons.forEach(b => {
+                        b.disabled = false;
+                        if(b !== btnElement) {
+                            b.className = "py-2.5 px-3 bg-white/60 hover:bg-indigo-600 hover:text-white border-2 border-indigo-400/40 hover:border-indigo-600 rounded-xl text-xs md:text-sm font-bold text-slate-800 transition transform hover:-translate-y-0.5 active:scale-95 font-sans shadow-sm backdrop-blur-sm flex items-center justify-center gap-1";
+                        }
+                    });
+                }, 1000);
+            }
+        }
+    </script>
+
+    <!-- LEVEL 2 MECHANICS -->
+    <script>
+        let l2ActiveBalls = [];
+        let l2FallingInterval;
+
+        function startLevel2() {
+            gameState.currentLevel = 2;
+            gameState.level2QuestionIndex = 0;
+            document.getElementById('level-indicator').innerText = "2 / 3";
+            document.getElementById('timer-box').classList.add('hidden');
+
+            hideAllScreens();
+            document.getElementById('screen-level2').classList.remove('hidden');
+
+            const field = document.getElementById('l2-falling-field');
+            const player = document.getElementById('l2-catcher-player');
+
+            function updatePlayerPosition(clientX) {
+                const rect = field.getBoundingClientRect();
+                let relativeX = clientX - rect.left;
+                const playerWidth = player.offsetWidth;
+                
+                if (relativeX < playerWidth / 2) relativeX = playerWidth / 2;
+                if (relativeX > rect.width - playerWidth / 2) relativeX = rect.width - playerWidth / 2;
+                
+                player.style.left = (relativeX - playerWidth / 2) + "px";
+                player.style.transform = "none"; 
+            }
+
+            field.onmousemove = (e) => updatePlayerPosition(e.clientX);
+            field.ontouchmove = (e) => {
+                if(e.touches.length > 0) {
+                    updatePlayerPosition(e.touches[0].clientX);
+                }
+            };
+            field.onclick = (e) => updatePlayerPosition(e.clientX);
+
+            loadLevel2Question();
+        }
+
+        function loadLevel2Question() {
+            clearL2FallingElements();
+
+            const question = level2Questions[gameState.level2QuestionIndex];
+            document.getElementById('l2-question-num').innerText = `${gameState.level2QuestionIndex + 1} / 10`;
+            document.getElementById('l2-sentence').innerText = question.sentence;
+            document.getElementById('l2-translation').innerText = `Arti: ${question.translation}`;
+
+            spawnL2FallingBalls(question);
+        }
+
+        function spawnL2FallingBalls(question) {
+            const field = document.getElementById('l2-falling-field');
+            const options = [...question.options]; 
+            options.sort(() => Math.random() - 0.5);
+
+            l2ActiveBalls = [];
+            const lanePositions = [10, 30, 50, 70, 90]; 
+
+            options.forEach((opt, idx) => {
+                const ball = document.createElement('div');
+                ball.className = "absolute w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-orange-500 to-orange-700 border-2 border-orange-600 rounded-full shadow-lg flex flex-col items-center justify-center font-extrabold text-[10px] md:text-[11px] text-white select-none z-10 font-sans tracking-tight";
+                
+                ball.innerHTML = `
+                    <span class="leading-none text-xs">🏀</span>
+                    <span class="leading-none uppercase">${opt}</span>
+                `;
+
+                const basePercent = lanePositions[idx] || (idx * 20 + 10);
+                ball.style.left = `${basePercent}%`;
+                ball.style.top = `-60px`;
+
+                field.appendChild(ball);
+
+                const speed = 1.1 + (Math.random() * 0.45); 
+
+                l2ActiveBalls.push({
+                    element: ball,
+                    y: -60,
+                    speed: speed,
+                    value: opt,
+                    correct: opt === question.answer
+                });
+            });
+
+            clearInterval(l2FallingInterval);
+            l2FallingInterval = setInterval(updateL2FallingPhysics, 20);
+        }
+
+        function updateL2FallingPhysics() {
+            const field = document.getElementById('l2-falling-field');
+            const fieldHeight = field.clientHeight;
+            const player = document.getElementById('l2-catcher-player');
+            const playerRect = player.getBoundingClientRect();
+
+            l2ActiveBalls.forEach((ballObj) => {
+                ballObj.y += ballObj.speed;
+                ballObj.element.style.top = `${ballObj.y}px`;
+
+                const ballRect = ballObj.element.getBoundingClientRect();
+
+                if (
+                    ballRect.bottom >= playerRect.top &&
+                    ballRect.top <= playerRect.bottom &&
+                    ballRect.right >= playerRect.left &&
+                    ballRect.left <= playerRect.right
+                ) {
+                    handleL2Collision(ballObj);
+                } else if (ballObj.y > fieldHeight) {
+                    ballObj.y = -60;
+                }
+            });
+        }
+
+        function handleL2Collision(ballObj) {
+            clearInterval(l2FallingInterval);
+
+            if (ballObj.correct) {
+                playSound('success');
+                ballObj.element.className = "absolute w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-emerald-500 to-emerald-700 border-2 border-emerald-400 rounded-full shadow-lg flex flex-col items-center justify-center font-extrabold text-[10px] md:text-[11px] text-white z-30 scale-125 duration-200 font-sans";
+                ballObj.element.innerHTML = `<span>⭐</span><span>OK</span>`;
+
+                gameState.score += 10;
+                document.getElementById('score-display').innerText = gameState.score;
+                gameState.level2QuestionIndex++;
+
+                setTimeout(() => {
+                    if (gameState.level2QuestionIndex >= 10) {
+                        showTransitionScreen(
+                            "Tantangan Level 2 Takluk! 🚀",
+                            "Hebat! Skor Anda sekarang: " + gameState.score + ". Bersiaplah untuk melempar bola basket di Level 3!",
+                            "Mulai Level 3 ⚡",
+                            3
+                        );
+                    } else {
+                        loadLevel2Question();
+                    }
+                }, 1000);
+            } else {
+                playSound('wrong');
+                ballObj.element.className = "absolute w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-rose-600 to-rose-800 border-2 border-rose-500 rounded-full shadow-lg flex flex-col items-center justify-center font-extrabold text-[10px] md:text-[11px] text-white z-30 animate-bounce font-sans";
+                ballObj.element.innerHTML = `<span>❌</span><span>MISS</span>`;
+
+                setTimeout(() => {
+                    ballObj.element.remove();
+                    l2ActiveBalls = l2ActiveBalls.filter(b => b !== ballObj);
+                    l2FallingInterval = setInterval(updateL2FallingPhysics, 20);
+                }, 800);
+            }
+        }
+
+        function clearL2FallingElements() {
+            clearInterval(l2FallingInterval);
+            l2ActiveBalls.forEach(ballObj => ballObj.element.remove());
+            l2ActiveBalls = [];
+        }
+    </script>
+
+    <!-- LEVEL 3 MECHANICS (DIAGONAL BOUNCING HOOPS IMPLEMENTATION) -->
+    <script>
+        let l3Hoops = [];
+        let l3PhysicsRequestId = null;
+        let l3IsActive = false;
+
+        function startLevel3() {
+            gameState.currentLevel = 3;
+            gameState.level3QuestionIndex = 0;
+            document.getElementById('level-indicator').innerText = "3 / 3";
+
+            hideAllScreens();
+            document.getElementById('screen-level3').classList.remove('hidden');
+
+            const field = document.getElementById('l3-shooting-field');
+            field.style.cursor = "crosshair";
+            
+            field.onclick = null;
+            field.onclick = (e) => {
+                handleCourtInteraction(e, field);
+            };
+
+            l3IsActive = true;
+            loadLevel3Question();
+            startTimer(60); // 60 Seconds limit requested by user for Level 3
+        }
+
+        function loadLevel3Question() {
+            clearLevel3Hoops();
+
+            const question = level3Questions[gameState.level3QuestionIndex];
+            document.getElementById('l3-question-num').innerText = `${gameState.level3QuestionIndex + 1} / 10`;
+            document.getElementById('l3-sentence').innerText = question.sentence;
+            document.getElementById('l3-translation').innerText = `Arti: ${question.translation}`;
+
+            spawnLevel3ParallelHoops(question);
+        }
+
+        function spawnLevel3ParallelHoops(question) {
+            const containerEl = document.getElementById('l3-hoops-container');
+            containerEl.innerHTML = '';
+            l3Hoops = [];
+
+            const remainingPool = all13Prepositions.filter(p => p !== question.answer);
+            remainingPool.sort(() => Math.random() - 0.5);
+            const distractors = remainingPool.slice(0, 6);
+            
+            const pool = [question.answer, ...distractors];
+            pool.sort(() => Math.random() - 0.5); 
+
+            const field = document.getElementById('l3-shooting-field');
+            const fieldWidth = field.clientWidth || 800;
+            const fieldHeight = field.clientHeight || 390;
+
+            pool.forEach((word, idx) => {
+                const hoopContainer = document.createElement('div');
+                hoopContainer.className = "absolute flex flex-col items-center select-none pointer-events-auto transition-shadow duration-150 cursor-crosshair z-20 origin-center";
+
+                hoopContainer.innerHTML = `
+                    <div class="bg-white/95 border-2 border-orange-600 rounded-md px-3 py-1 text-slate-800 font-extrabold text-xs md:text-sm shadow-md whitespace-nowrap tracking-wide select-none">
+                        ${word.toUpperCase()}
+                    </div>
+                    <div class="w-10 h-8 flex flex-col items-center -mt-0.5 pointer-events-none">
+                        <div class="w-8 h-2 bg-transparent border-2 border-orange-500 rounded-full shadow-[0_2px_4px_rgba(249,115,22,0.5)]"></div>
+                        <div class="w-6 h-5 border-x-2 border-b-2 border-dashed border-white bg-orange-500/10 rounded-b-md"></div>
+                    </div>
+                `;
+
+                containerEl.appendChild(hoopContainer);
+
+                const startPos = scatteredHoopPositions[idx] || { x: 10 * idx, y: 30 };
+                const initialX = (startPos.x / 100) * (fieldWidth - 120);
+                const initialY = (startPos.y / 100) * (fieldHeight - 160) + 10;
+
+                // Random diagonal speeds (Kecepatan Sedang)
+                const speedX = (Math.random() > 0.5 ? 1 : -1) * (0.8 + Math.random() * 0.7);
+                const speedY = (Math.random() > 0.5 ? 1 : -1) * (0.6 + Math.random() * 0.6);
+
+                hoopContainer.style.transform = `translate(${initialX}px, ${initialY}px)`;
+
+                const hoopObj = {
+                    element: hoopContainer,
+                    x: initialX,
+                    y: initialY,
+                    vx: speedX,
+                    vy: speedY,
+                    width: 100,  
+                    height: 60,  
+                    value: word,
+                    correct: word === question.answer,
+                    hitResolved: false
+                };
+
+                l3Hoops.push(hoopObj);
+
+                hoopContainer.ontouchstart = hoopContainer.onclick = (e) => {
+                    e.stopPropagation();
+                    if (hoopObj.hitResolved) return; 
+                    
+                    const rect = hoopContainer.getBoundingClientRect();
+                    const fieldRect = document.getElementById('l3-shooting-field').getBoundingClientRect();
+                    
+                    const absX = rect.left - fieldRect.left + (rect.width / 2);
+                    const absY = rect.top - fieldRect.top + (rect.height / 2);
+                    
+                    animateAndShootBasketball(hoopObj, absX, absY, word === question.answer);
+                };
+            });
+
+            if (l3PhysicsRequestId) {
+                cancelAnimationFrame(l3PhysicsRequestId);
+            }
+            l3PhysicsRequestId = requestAnimationFrame(updateLevel3Physics);
+        }
+
+        // JS 2D Physics Loop for diagonal floating and elastic collision bounces
+        function updateLevel3Physics() {
+            if (!l3IsActive || gameState.currentLevel !== 3) return;
+
+            const field = document.getElementById('l3-shooting-field');
+            const fieldWidth = field.clientWidth || 800;
+            const fieldHeight = field.clientHeight || 390;
+
+            const playableHeightLimit = fieldHeight - 125; 
+
+            l3Hoops.forEach((hoop) => {
+                if (hoop.hitResolved) return; 
+
+                hoop.x += hoop.vx;
+                hoop.y += hoop.vy;
+
+                if (hoop.x <= 5) {
+                    hoop.x = 5;
+                    hoop.vx = -hoop.vx;
+                } else if (hoop.x + hoop.width >= fieldWidth - 5) {
+                    hoop.x = fieldWidth - hoop.width - 5;
+                    hoop.vx = -hoop.vx;
+                }
+
+                if (hoop.y <= 5) {
+                    hoop.y = 5;
+                    hoop.vy = -hoop.vy;
+                } else if (hoop.y + hoop.height >= playableHeightLimit) {
+                    hoop.y = playableHeightLimit - hoop.height;
+                    hoop.vy = -hoop.vy;
+                }
+
+                hoop.element.style.transform = `translate(${hoop.x}px, ${hoop.y}px)`;
+            });
+
+            for (let i = 0; i < l3Hoops.length; i++) {
+                let h1 = l3Hoops[i];
+                if (h1.hitResolved) continue;
+
+                for (let j = i + 1; j < l3Hoops.length; j++) {
+                    let h2 = l3Hoops[j];
+                    if (h2.hitResolved) continue;
+
+                    const c1x = h1.x + (h1.width / 2);
+                    const c1y = h1.y + (h1.height / 2);
+                    const c2x = h2.x + (h2.width / 2);
+                    const c2y = h2.y + (h2.height / 2);
+
+                    const dx = c2x - c1x;
+                    const dy = c2y - c1y;
+                    const distance = Math.hypot(dx, dy);
+                    const collisionRadius = 85; 
+
+                    if (distance < collisionRadius && distance > 0) {
+                        const overlap = collisionRadius - distance;
+                        const nx = dx / distance;
+                        const ny = dy / distance;
+
+                        h1.x -= nx * overlap * 0.5;
+                        h1.y -= ny * overlap * 0.5;
+                        h2.x += nx * overlap * 0.5;
+                        h2.y += ny * overlap * 0.5;
+
+                        const tempVx = h1.vx;
+                        const tempVy = h1.vy;
+                        h1.vx = h2.vx;
+                        h1.vy = h2.vy;
+                        h2.vx = tempVx;
+                        h2.vy = tempVy;
+                    }
+                }
+            }
+
+            l3PhysicsRequestId = requestAnimationFrame(updateLevel3Physics);
+        }
+
+        function handleCourtInteraction(e, field) {
+            const rect = field.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            let clickedHoop = null;
+            l3Hoops.forEach((hoop) => {
+                if (hoop.hitResolved) return;
+                
+                const hLeft = hoop.x;
+                const hRight = hoop.x + hoop.width;
+                const hTop = hoop.y;
+                const hBottom = hoop.y + hoop.height;
+                
+                if (clickX >= hLeft && clickX <= hRight && clickY >= hTop && clickY <= hBottom) {
+                    clickedHoop = hoop;
+                }
+            });
+
+            if (clickedHoop) {
+                animateAndShootBasketball(clickedHoop, clickX, clickY, clickedHoop.correct);
+            } else {
+                animateAndShootBasketball(null, clickX, clickY, false);
+            }
+        }
+
+        function triggerSwishSuccessSparks(x, y) {
+            const container = document.getElementById('l3-explosions-layer');
+            
+            const exp = document.createElement('div');
+            exp.className = "absolute w-24 h-24 -ml-12 -mt-12 flex items-center justify-center pointer-events-none z-50";
+            exp.style.left = `${x}px`;
+            exp.style.top = `${y}px`;
+            
+            exp.innerHTML = `
+                <div class="explosion-ring absolute inset-0 rounded-full border-4 border-emerald-400 bg-teal-500/30 opacity-80"></div>
+                <div class="absolute text-4xl animate-ping opacity-90">🏀</div>
+                <div class="absolute text-3xl transform scale-150 duration-300">🎉</div>
+            `;
+            
+            container.appendChild(exp);
+            
+            setTimeout(() => {
+                exp.remove();
+            }, 600);
+        }
+
+        function animateAndShootBasketball(hoopObj, targetX, targetY, isCorrect) {
+            const field = document.getElementById('l3-shooting-field');
+            const rect = field.getBoundingClientRect();
+
+            const startX = rect.width / 2;
+            const startY = rect.height - 85;
+
+            const kidImg = document.getElementById('l3-gun-img');
+            if (kidImg) {
+                kidImg.classList.add('throw-active');
+                setTimeout(() => {
+                    kidImg.classList.remove('throw-active');
+                }, 450);
+            }
+
+            playSound('shoot');
+
+            const ball = document.createElement('div');
+            ball.className = "absolute text-3xl select-none pointer-events-none z-40";
+            ball.innerText = "🏀";
+            ball.style.left = `${startX}px`;
+            ball.style.top = `${startY}px`;
+
+            field.appendChild(ball);
+
+            const startTime = performance.now();
+            const duration = 500; 
+            const arcHeight = 110; 
+
+            function frame(now) {
+                const elapsed = now - startTime;
+                const t = Math.min(elapsed / duration, 1);
+
+                let currentTargetX = targetX;
+                let currentTargetY = targetY;
+
+                if (hoopObj && !hoopObj.hitResolved) {
+                    currentTargetX = hoopObj.x + (hoopObj.width / 2);
+                    currentTargetY = hoopObj.y + (hoopObj.height / 2);
+                }
+
+                const currentX = startX + t * (currentTargetX - startX);
+                const currentY = (startY + t * (currentTargetY - startY)) - (Math.sin(t * Math.PI) * arcHeight);
+
+                ball.style.left = `${currentX}px`;
+                ball.style.top = `${currentY}px`;
+                
+                ball.style.transform = `rotate(${t * 640}deg) scale(${1 - Math.sin(t * Math.PI) * 0.15})`;
+
+                if (t < 1) {
+                    requestAnimationFrame(frame);
+                } else {
+                    ball.remove();
+                    handleHitResolution(hoopObj, currentTargetX, currentTargetY, isCorrect);
+                }
+            }
+
+            requestAnimationFrame(frame);
+        }
+
+        function handleHitResolution(hoopObj, targetX, targetY, isCorrect) {
+            if (hoopObj) {
+                if (isCorrect) {
+                    playSound('explode');
+                    triggerSwishSuccessSparks(targetX, targetY);
+
+                    hoopObj.hitResolved = true; 
+                    hoopObj.element.className = "absolute px-5 py-2 rounded-full bg-gradient-to-r from-yellow-400 to-orange-600 text-white font-black scale-110 z-20 border-2 border-yellow-300 drop-shadow-[0_0_20px_rgba(245,158,11,0.9)] font-sans transition-all duration-300";
+                    hoopObj.element.style.transform = `translate(${hoopObj.x}px, ${hoopObj.y}px)`;
+                    hoopObj.element.innerHTML = "🏆 MASUK! +10";
+
+                    gameState.score += 10;
+                    document.getElementById('score-display').innerText = gameState.score;
+                    gameState.level3QuestionIndex++;
+
+                    setTimeout(() => {
+                        if (gameState.level3QuestionIndex >= 10) {
+                            clearInterval(gameState.timerInterval);
+                            l3IsActive = false;
+                            cancelAnimationFrame(l3PhysicsRequestId);
+                            showTransitionScreen(
+                                "Misi Selesai Dengan Sempurna! 🎖️",
+                                "Luar biasa! Anda adalah master preposisi bahasa Inggris sejati. Skor akhirmu: " + gameState.score + ". Ambil sertifikatmu sekarang!",
+                                "Klaim Sertifikat 🎓",
+                                'cert'
+                            );
+                        } else {
+                            loadLevel3Question();
+                        }
+                    }, 1200);
+                } else {
+                    playSound('wrong');
+                    hoopObj.element.classList.add('animate-bounce');
+                    setTimeout(() => {
+                        hoopObj.element.classList.remove('animate-bounce');
+                    }, 400);
+                }
+            }
+        }
+
+        function clearLevel3Hoops() {
+            const containerEl = document.getElementById('l3-hoops-container');
+            if (containerEl) containerEl.innerHTML = '';
+            l3Hoops = [];
+            if (l3PhysicsRequestId) {
+                cancelAnimationFrame(l3PhysicsRequestId);
+            }
+        }
+    </script>
+
+    <!-- ON-DEVICE CERTIFICATE SYSTEM (100% Android APK & PC Compatible) -->
+    <script>
+        function startCertificateScreen() {
+            gameState.currentLevel = 4;
+            l3IsActive = false;
+            cancelAnimationFrame(l3PhysicsRequestId);
+            document.getElementById('level-indicator').innerText = "Lulus";
+            document.getElementById('timer-box').classList.add('hidden');
+
+            hideAllScreens();
+            document.getElementById('screen-certificate').classList.remove('hidden');
+
+            // Detect if running on mobile browser / WebView (APK)
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (isMobile) {
+                document.getElementById('mobile-instruction').classList.remove('hidden');
+            } else {
+                document.getElementById('download-btn-laptop').classList.remove('hidden');
+            }
+        }
+
+        function renderCertificate() {
+            const nameInput = document.getElementById('player-fullname').value.trim();
+            if (nameInput === "") {
+                document.getElementById('player-fullname').focus();
+                document.getElementById('player-fullname').placeholder = "⚠️ MOHON INPUT NAMA ANDA!";
+                return;
+            }
+
+            playSound('complete');
+
+            // Set up HTML5 Canvas resolution-boosting drawing
+            const canvas = document.getElementById('canvas-cert');
+            const ctx = canvas.getContext('2d');
+
+            // Clear & Draw luxury background cream gradient
+            const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            grad.addColorStop(0, '#ffffff');
+            grad.addColorStop(1, '#fffbf0');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw outer Navy Border
+            ctx.strokeStyle = '#1e3a8a'; 
+            ctx.lineWidth = 16;
+            ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+
+            // Draw inner Gold dashed Border
+            ctx.strokeStyle = '#d97706'; 
+            ctx.lineWidth = 4;
+            ctx.setLineDash([12, 12]);
+            ctx.strokeRect(26, 26, canvas.width - 52, canvas.height - 52);
+            ctx.setLineDash([]); // Reset line dashes
+
+            // Header banner text
+            ctx.fillStyle = '#b45309';
+            ctx.font = 'bold 22px "Fredoka", sans-serif';
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'center';
+            ctx.fillText('SERTIFIKAT KELULUSAN', canvas.width / 2, 90);
+
+            // Large Title
+            ctx.fillStyle = '#1e293b';
+            ctx.font = 'bold 36px "Fredoka", sans-serif';
+            ctx.fillText('PREPOSITION QUEST ADVENTURE', canvas.width / 2, 145);
+
+            // Subtitle
+            ctx.fillStyle = '#64748b';
+            ctx.font = 'italic 16px "Inter", sans-serif';
+            ctx.fillText('Dengan ini menyatakan bahwa siswa berprestasi:', canvas.width / 2, 220);
+
+            // Student Name (Dynamic Highlighted indigo font)
+            ctx.fillStyle = '#4338ca';
+            ctx.font = 'bold 38px "Fredoka", sans-serif';
+            ctx.fillText(nameInput.toUpperCase(), canvas.width / 2, 285);
+
+            // Decorative underline below name
+            ctx.strokeStyle = '#c7d2fe';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2 - 200, 312);
+            ctx.lineTo(canvas.width / 2 + 200, 312);
+            ctx.stroke();
+
+            // Cert narrative text body
+            ctx.fillStyle = '#334155';
+            ctx.font = '16px "Inter", sans-serif';
+            ctx.fillText('Telah berhasil menyelesaikan seluruh tantangan interaktif preposisi bahasa Inggris', canvas.width / 2, 365);
+            ctx.fillText(`(Level 1, Level 2, dan Level 3) dengan total pencapaian skor: ${gameState.score} POIN.`, canvas.width / 2, 395);
+
+            // Stamp emblem graphics
+            ctx.fillStyle = 'rgba(245, 158, 11, 0.15)';
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, 480, 42, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#b45309';
+            ctx.font = '32px "Inter", sans-serif';
+            ctx.fillText('🏆', canvas.width / 2, 480);
+
+            // Date stamp (Bottom Left corner)
+            const today = new Date();
+            const dateStr = today.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '12px "Inter", sans-serif';
+            ctx.fillText('Tanggal Kelulusan', 180, 465);
+            ctx.fillStyle = '#334155';
+            ctx.font = 'bold 15px "Inter", sans-serif';
+            ctx.fillText(dateStr, 180, 495);
+
+            // Signatures (Bottom Right corner)
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '12px "Inter", sans-serif';
+            ctx.fillText('Disetujui Oleh', canvas.width - 180, 465);
+            ctx.fillStyle = '#334155';
+            ctx.font = 'bold 15px monospace';
+            ctx.fillText('Preposition Quest AI', canvas.width - 180, 495);
+
+            // Convert canvas rendering to base64 Data URL and load onto screen target Image
+            const imgData = canvas.toDataURL('image/png');
+            document.getElementById('cert-display').src = imgData;
+
+            // Open certificate view container
+            document.getElementById('cert-img-container').classList.remove('hidden');
+            document.getElementById('cert-img-container').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function downloadOnLaptop() {
+            const canvas = document.getElementById('canvas-cert');
+            const nameInput = document.getElementById('player-fullname').value.trim() || 'Siswa';
+            
+            try {
+                // Use standard document.execCommand / programmatic trigger for laptop download compatibility
+                const url = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.download = `Sertifikat_Preposition_Quest_${nameInput.replace(/\s+/g, '_')}.png`;
+                link.href = url;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (err) {
+                console.warn('Gagal memicu pengunduhan laptop langsung:', err);
+            }
+        }
+
+        function triggerLectoraRedirect() {
+            try {
+                if (window.parent && window.parent.trivNextPage) {
+                    if (window.parent.VarLevelTamat) {
+                        window.parent.VarLevelTamat.set('1');
+                    }
+                    window.parent.trivNextPage();
+                } else {
+                    console.log("No Lectora container found. Running stand-alone.");
+                }
+            } catch (err) {
+                console.warn("Sedang berjalan di luar iframe Lectora:", err);
+            }
+        }
+    </script>
+</body>
+</html>
